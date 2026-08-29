@@ -1,0 +1,373 @@
+@import url('https://fonts.googleapis.com/css2?family=Montserrat:wght@400;500;700;800;900&family=Space+Grotesk:wght@500;700;905&family=Inter:wght@400;500;650;750&family=JetBrains+Mono:wght@400;550;750&display=swap');
+@import "tailwindcss";
+
+@theme {
+  --font-sans: "Inter", ui-sans-serif, system-ui, sans-serif;
+  --font-mono: "JetBrains Mono", ui-monospace, SFMono-Regular, monospace;
+  --font-display: "Montserrat", sans-serif;
+}
+
+html, body {
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  text-rendering: optimizeLegibility;
+  color: #0f172a; /* Slate 900 for absolute high contrast base text */
+}
+
+/* Ensure inputs and placeholders are fully legible and high contrast */
+input, textarea, select, button {
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+/* Custom general placeholder styling */
+::placeholder {
+  color: #64748b !important; /* Slate 500 placeholder so they are clearly visible */
+  opacity: 1 !important;
+}
+
+/* =========================================
+   Glassmorphism Dark Mode override rules
+   ========================================= */
+
+.dark body {
+  color: #f8fafc;
+}
+
+/* We override glass colors with rich translucent dark colors when in dark mode */
+.dark #sync-hub-bar {
+  background-color: rgba(28, 18, 14, 0.5) !important;
+  border-color: rgba(90, 60, 45, 0.45) !important;
+  box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.2), 0 2px 4px -2px rgba(0, 0, 0, 0.2) !important;
+}
+
+.dark #sync-hub-bar span {
+  color: #d1c2b9 !important;
+}
+
+.dark header h1 {
+  color: #047857 !important; /* Original deep, vivid emerald green for perfect premium styling */
+  filter: drop-shadow(0 0 12px rgba(4, 120, 87, 0.45)) !important;
+}
+
+.dark header div {
+  /* Keep default styling */
+}
+
+/* Ensure header sub-control buttons have clear, bright text and visible border in dark mode */
+.dark #title-sub-controls button,
+.dark #title-sub-controls div {
+  color: #f8fafc !important;
+  border-color: rgba(226, 232, 240, 0.7) !important;
+}
+
+.dark #title-sub-controls span {
+  color: #f8fafc !important;
+}
+
+.dark #filtering-controls-row {
+  background-color: rgba(28, 18, 14, 0.45) !important;
+  border-color: rgba(90, 60, 45, 0.4) !important;
+  box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.3) !important;
+}
+
+.dark #filtering-controls-row span,
+.dark #filtering-controls-row label {
+  color: #cbd5e1 !important;
+}
+
+.dark #search-input-field {
+  background-color: rgba(28, 18, 14, 0.75) !important;
+  border-color: rgba(90, 60, 45, 0.55) !important;
+  color: #f1f5f9 !important;
+}
+
+.dark #search-input-field:focus {
+  border-color: #fb923c !important;
+  background-color: rgba(26, 16, 6, 0.95) !important;
+}
+
+.dark #search-input-field::placeholder {
+  color: #a78bfa !important; /* Warm purple placeholder contrast */
+}
+
+/* Glassmorphic Todo Card overrides for Dark mode */
+.dark [id^="todo-card-"] {
+  background-color: rgba(28, 18, 14, 0.6) !important;
+  border-color: rgba(90, 60, 45, 0.4) !important;
+  color: #f1f5f9 !important;
+  box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.2), 0 4px 6px -4px rgba(0, 0, 0, 0.2) !important;
+}
+
+.dark [id^="todo-card-"]:hover {
+  border-color: rgba(251, 146, 60, 0.25) !important;
+}
+
+.dark [id^="todo-title-"] {
+  color: #f8fafc !important;
+}
+
+.dark [id^="todo-card-"] p {
+  color: #cbd5e1 !important;
+}
+
+/* Category & info badges in dark mode */
+.dark [id^="todo-card-"] span.bg-slate-100 {
+  background-color: rgba(42, 27, 20, 0.7) !important;
+  border-color: rgba(90, 60, 45, 0.5) !important;
+  color: #cbd5e1 !important;
+}
+
+.dark [id^="todo-card-"] span.bg-slate-100 svg {
+  color: #cbd5e1 !important;
+}
+
+.dark [id^="todo-card-"] button.bg-white {
+  background-color: rgba(42, 27, 20, 0.75) !important;
+  border-color: rgba(90, 60, 45, 0.5) !important;
+  color: #cbd5e1 !important;
+}
+
+.dark [id^="todo-card-"] button.bg-white:hover {
+  border-color: #fb923c !important;
+  color: #fb923c !important;
+}
+
+/* Actions side button overrides in dark mode */
+.dark [id^="todo-card-"] button.bg-white\/60 {
+  background-color: rgba(42, 27, 20, 0.7) !important;
+  border-color: rgba(90, 60, 45, 0.4) !important;
+  color: #cbd5e1 !important;
+}
+
+.dark [id^="todo-card-"] button.bg-white\/60:hover {
+  border-color: #fb923c !important;
+  color: #fb923c !important;
+}
+
+/* Subtasks container override */
+.dark [id^="todo-card-"] .bg-white\/70 {
+  background-color: rgba(28, 18, 14, 0.7) !important;
+  border-color: rgba(90, 60, 45, 0.4) !important;
+}
+
+.dark [id^="todo-card-"] .bg-white\/70 label {
+  color: #cbd5e1 !important;
+}
+
+.dark [id^="todo-card-"] .bg-white\/70 span.text-slate-700 {
+  color: #e2e8f0 !important;
+}
+
+/* Inputs / controls for Adding and Editing */
+.dark #add-todo-form-card,
+.dark .add-todo-form-layout {
+  background-color: rgba(28, 18, 14, 0.6) !important;
+  border-color: rgba(90, 60, 45, 0.4) !important;
+  box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.2) !important;
+}
+
+.dark #add-todo-form-card label,
+.dark #add-todo-form-card span {
+  color: #cbd5e1 !important;
+}
+
+.dark #add-todo-form-card input,
+.dark #add-todo-form-card textarea,
+.dark #add-todo-form-card select {
+  background-color: rgba(28, 18, 14, 0.75) !important;
+  border-color: rgba(90, 60, 45, 0.55) !important;
+  color: #f1f5f9 !important;
+}
+
+.dark #add-todo-form-card input:focus,
+.dark #add-todo-form-card textarea:focus,
+.dark #add-todo-form-card select:focus {
+  border-color: #fb923c !important;
+  background-color: rgba(26, 16, 6, 0.95) !important;
+}
+
+.dark #add-todo-form-card input::placeholder,
+.dark #add-todo-form-card textarea::placeholder {
+  color: #e2e8f0 !important;
+}
+
+.dark #add-todo-form-card button.bg-white {
+  background-color: rgba(42, 27, 20, 0.7) !important;
+  border-color: rgba(90, 60, 45, 0.45) !important;
+  color: #cbd5e1 !important;
+}
+
+.dark #add-todo-form-card button.border-slate-150 {
+  border-color: rgba(90, 60, 45, 0.4) !important;
+}
+
+/* Calendar Synced banner and indicator */
+.dark .bg-emerald-50 {
+  background-color: rgba(42, 27, 20, 0.65) !important;
+  border-color: rgba(251, 146, 60, 0.3) !important;
+}
+.dark .text-emerald-850,
+.dark .text-emerald-700,
+.dark .text-emerald-800 {
+  color: #fb923c !important;
+}
+
+/* Statistics Widgets overrides in dark mode */
+.dark #interactive-stats-row > div {
+  background-color: rgba(28, 18, 14, 0.6) !important;
+  border-color: rgba(90, 60, 45, 0.4) !important;
+  box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.2) !important;
+}
+
+.dark #interactive-stats-row h4 {
+  color: #d1c2b9 !important;
+}
+
+.dark #interactive-stats-row span.text-slate-800 {
+  color: #f1f5f9 !important;
+}
+
+.dark #interactive-stats-row span.text-slate-500 {
+  color: #cbd5e1 !important;
+}
+
+.dark #interactive-stats-row div.bg-slate-50 {
+  background-color: rgba(28, 18, 14, 0.65) !important;
+  border-color: rgba(90, 60, 45, 0.5) !important;
+}
+
+.dark #category-scroll-container button {
+  background-color: rgba(42, 27, 20, 0.65) !important;
+  border-color: rgba(90, 60, 45, 0.45) !important;
+  color: #cbd5e1 !important;
+}
+
+.dark #category-scroll-container button.bg-emerald-600 {
+  background-color: #d97706 !important; /* Golden Amber theme active button */
+  border-color: transparent !important;
+  color: #ffffff !important;
+}
+
+.dark #category-scroll-container button:hover:not(.bg-emerald-600) {
+  border-color: rgba(251, 146, 60, 0.3) !important;
+  color: #ffffff !important;
+}
+
+/* Modals glassmorphic card for Edit Modal & custom confirm */
+.dark #edit-todo-modal-body,
+.dark #custom-confirm-body,
+.dark #alarm-modal-body {
+  background-color: rgba(28, 18, 14, 0.88) !important;
+  border-color: rgba(90, 60, 45, 0.5) !important;
+  color: #f1f5f9 !important;
+  box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.5) !important;
+}
+
+.dark #edit-todo-modal-body label,
+.dark #edit-todo-modal-body span.text-slate-550,
+.dark #edit-todo-modal-body span.text-slate-500 {
+  color: #cbd5e1 !important;
+}
+
+.dark #edit-todo-modal-body input,
+.dark #edit-todo-modal-body textarea,
+.dark #edit-todo-modal-body select {
+  background-color: rgba(28, 18, 14, 0.8) !important;
+  border-color: rgba(90, 60, 45, 0.55) !important;
+  color: #f1f5f9 !important;
+}
+
+.dark #edit-todo-modal-body input:focus,
+.dark #edit-todo-modal-body textarea:focus,
+.dark #edit-todo-modal-body select:focus {
+  border-color: #fb923c !important;
+  background-color: rgba(26, 16, 6, 0.95) !important;
+}
+
+.dark #edit-todo-modal-body button.bg-white,
+.dark #edit-todo-modal-body button.bg-slate-100 {
+  background-color: rgba(42, 27, 20, 0.6) !important;
+  border-color: rgba(90, 60, 45, 0.4) !important;
+  color: #cbd5e1 !important;
+}
+
+.dark #edit-todo-modal-body h2,
+.dark #custom-confirm-body h2 {
+  color: #f8fafc !important;
+}
+
+.dark #custom-confirm-body p {
+  color: #d1c2b9 !important;
+}
+
+.dark button#custom-confirm-cancel-btn {
+  background-color: rgba(42, 27, 20, 0.5) !important;
+  border-color: rgba(90, 60, 45, 0.4) !important;
+  color: #cbd5e1 !important;
+}
+
+.dark button#custom-confirm-cancel-btn:hover {
+  background-color: rgba(42, 27, 20, 0.7) !important;
+  color: #ffffff !important;
+}
+
+/* Monthly picker internal elements */
+.dark .bg-white.p-2.5.rounded-xl.border.border-slate-200\/50,
+.dark #monthly-day-picker-confirmed-view,
+.dark #edit-monthly-day-picker-confirmed-view {
+  background-color: rgba(28, 18, 14, 0.65) !important;
+  border-color: rgba(90, 60, 45, 0.5) !important;
+}
+
+.dark #monthly-day-picker-confirmed-view span,
+.dark #edit-monthly-day-picker-confirmed-view span {
+  color: #e2e8f0 !important;
+}
+
+.dark button#monthly-day-picker-change-btn,
+.dark button#edit-monthly-day-picker-change-btn {
+  background-color: rgba(42, 27, 20, 0.6) !important;
+  border-color: rgba(90, 60, 45, 0.4) !important;
+  color: #e2e8f0 !important;
+}
+
+.dark button#monthly-day-picker-change-btn:hover,
+.dark button#edit-monthly-day-picker-change-btn:hover {
+  background-color: rgba(42, 27, 20, 0.8) !important;
+  border-color: #fb923c !important;
+}
+
+.dark [id^="monthly-dayBtn-"],
+.dark [id^="edit-monthly-dayBtn-"] {
+  background-color: rgba(42, 27, 20, 0.5) !important;
+  border-color: rgba(90, 60, 45, 0.4) !important;
+  color: #cbd5e1 !important;
+}
+
+.dark [id^="monthly-dayBtn-"]:hover:not(.bg-emerald-600),
+.dark [id^="edit-monthly-dayBtn-"]:hover:not(.bg-emerald-600) {
+  border-color: #fb923c !important;
+  background-color: rgba(120, 80, 60, 0.21) !important;
+}
+
+.dark [id^="monthly-dayBtn-"].bg-emerald-600,
+.dark [id^="edit-monthly-dayBtn-"].bg-emerald-600 {
+  background-color: #d97706 !important;
+  border-color: transparent !important;
+  color: #ffffff !important;
+}
+
+/* Empty search state */
+.dark #empty-todos-fallback {
+  border-color: rgba(90, 60, 45, 0.4) !important;
+  background-color: rgba(28, 18, 14, 0.35) !important;
+}
+
+.dark #empty-todos-fallback h3 {
+  color: #f1f5f9 !important;
+}
+
+.dark #empty-todos-fallback p {
+  color: #d1c2b9 !important;
+}

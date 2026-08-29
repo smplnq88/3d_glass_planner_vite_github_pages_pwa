@@ -1,0 +1,8 @@
+{
+  "name": "3D Glass Todo List",
+  "description": "데일리 목록 뷰, 월/주별 캘린더 매트릭스 뷰, 카테고리별 보드 뷰와 정밀 알람 반복 주기 설정, 오프라인 및 GitHub 배포를 지원하는 프리미엄 3D 글래스모피즘 플래너",
+  "requestFramePermissions": [
+    "microphone"
+  ],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}
