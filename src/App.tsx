@@ -3,136 +3,33 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-import { useState, useEffect, DragEvent, ChangeEvent } from 'react';
+import { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'motion/react';
-import { Todo, Category, Priority, ConfettiParticle, AlarmRepeatType, AlarmSoundType } from './types';
-import { getNextAlarmTime } from './lib/alarmUtils';
+import { Todo, Category, ConfettiParticle } from './types';
 import BackgroundBlobs from './components/BackgroundBlobs';
 import TodoStats from './components/TodoStats';
 import AddTodoForm from './components/AddTodoForm';
 import TodoCard from './components/TodoCard';
 import EditTodoModal from './components/EditTodoModal';
-import ConfettiEffect from './components/ConfettiEffect';
 import CalendarView from './components/CalendarView';
 import CategoryView from './components/CategoryView';
 import { HealingJournalSection } from './components/HealingJournalSection';
 import { 
-  downloadStandaloneHtmlFile,
-  downloadViteGitHubPagesPwaZip,
-  downloadOfflineAppPackageZip,
-  downloadIconsBundleZip,
-  downloadSourceCodeZip,
-  downloadModifiedFilesZip
-} from './lib/exportUtils';
-import { 
   Sparkles, 
-  Search, 
-  ArrowDownAZ, 
-  CalendarDays,
-  Calendar, 
-  FlameKindling,
-  ListFilter,
-  Layers,
-  CheckCircle,
-  HelpCircle,
-  LogOut,
-  Bell,
-  Clock,
-  AlertCircle,
-  Sun,
-  Moon,
-  Download,
-  Smartphone,
-  Laptop,
-  Tablet,
-  Share,
-  Move,
-  ExternalLink,
-  ChevronDown,
-  Settings,
-  Database,
-  Upload,
-  QrCode,
-  SlidersHorizontal
+  Moon, 
+  Sun
 } from 'lucide-react';
-import { 
-  playAlarmSound 
-} from './lib/alarmAudio';
-import { 
-  CUBE_ICON_DATA,
-  ORIGINAL_ICON_DATA,
-  LOTUS_ICON_DATA,
-  NEBULA_ICON_DATA,
-  AURORA_ICON_DATA
-} from './iconData';
-
-// Firebase 연결을 끊고 오프라인 가짜(Mock) 함수로 대체합니다.
-const initAuth = (onSuccess: any, onFailure: any) => {
-  onSuccess({ displayName: "테스트 유저", email: "test@example.com", photoURL: null }, "mock-token");
-  return () => {};
-};
-const googleSignIn = async () => {
-  return { user: { displayName: "테스트 유저", email: "test@example.com", photoURL: null }, accessToken: "mock-token" };
-};
-const logout = async () => {};
-const syncTodoToGoogleCalendar = async (todo: any, token: string) => "mock-event-id";
-const deleteTodoFromGoogleCalendar = async (id: string, token: string) => {};
 
 export default function App() {
   const [todos, setTodos] = useState<Todo[]>([]);
-  const [selectedCategory, setSelectedCategory] = useState<Category>('All');
-  const [statusFilter, setStatusFilter] = useState<'All' | 'Completed' | 'Active'>('All');
-  const [searchQuery, setSearchQuery] = useState('');
-  const [sortBy, setSortBy] = useState<'latest' | 'dueDate' | 'priority' | 'custom'>('latest');
-  const [draggedTodoId, setDraggedTodoId] = useState<string | null>(null);
-  const [draggedOverTodoId, setDraggedOverTodoId] = useState<string | null>(null);
-  const [particles, setParticles] = useState<ConfettiParticle[]>([]);
+  const [statusFilter] = useState<'All' | 'Completed' | 'Active'>('All');
   const [mainViewMode, setMainViewMode] = useState<'list' | 'calendar' | 'category'>('list');
   const [prefilledCalendarDate, setPrefilledCalendarDate] = useState<string>('');
 
-  // Google Sign-In and Token States
-  const [currentUser, setCurrentUser] = useState<any>(null);
-  const [googleAccessToken, setGoogleAccessToken] = useState<string | null>(null);
-  const [authChecking, setAuthChecking] = useState(true);
-
-  // Alarms coordination state
-  const [activeAlarmTodo, setActiveAlarmTodo] = useState<Todo | null>(null);
-  const [audioStopper, setAudioStopper] = useState<(() => void) | null>(null);
-  
-  // Editing state
-  const [editingTodo, setEditingTodo] = useState<Todo | null>(null);
-  const [isEditModalOpen, setIsEditModalOpen] = useState(false);
-
-  // Device view mode: 'pc' | 'tablet' | 'mobile'
-  const [deviceViewMode, setDeviceViewMode] = useState<'pc' | 'tablet' | 'mobile'>('pc');
-  const isMobileSimulator = deviceViewMode === 'mobile';
-  const isTabletSimulator = deviceViewMode === 'tablet';
-  
-  // Mobile settings dropdown and Sort dropdown state
-  const [isHeaderMenuOpen, setIsHeaderMenuOpen] = useState(false);
-  const [isSortDropdownOpen, setIsSortDropdownOpen] = useState(false);
-  const [showDevTools, setShowDevTools] = useState(false);
-  
-  // Custom toast notifications feed
+  // Toast notifications feed
   const [toastMessage, setToastMessage] = useState<{ text: string; type: 'success' | 'error' | 'info' } | null>(null);
 
-  // Custom confirmation modal state
-  const [confirmModal, setConfirmModal] = useState<{
-    isOpen: boolean;
-    title: string;
-    message: string;
-    onConfirm: () => void;
-    confirmText?: string;
-    cancelText?: string;
-    isDestructive?: boolean;
-  }>({
-    isOpen: false,
-    title: '',
-    message: '',
-    onConfirm: () => {},
-  });
-
-  // Theme state: light (pastel) or dark (dark glass)
+  // Theme state: light or dark
   const [theme, setTheme] = useState<'light' | 'dark'>(() => {
     if (typeof window !== 'undefined') {
       const savedTheme = localStorage.getItem('3d_glass_theme');
@@ -155,109 +52,21 @@ export default function App() {
     }
   }, [theme]);
 
-  // PWA Install prompt state & device compatibility listeners
-  const [deferredPrompt, setDeferredPrompt] = useState<any>(null);
-  const [isInstallable, setIsInstallable] = useState(false);
-  const [showInstallGuide, setShowInstallGuide] = useState(false);
-
-  // App icon customizer states
-  const [selectedIconKey, setSelectedIconKey] = useState<string>('original');
-  const [previewIconKey, setPreviewIconKey] = useState<string>('original');
-  const [iconVersion, setIconVersion] = useState<number>(Date.now());
-  const [pwaUpdateAvailable, setPwaUpdateAvailable] = useState(false);
-
-  const handleSetIcon = async (key: string) => {
-    try {
-      const response = await fetch('/api/set-icon', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ key })
-      });
-      if (response.ok) {
-        setSelectedIconKey(key);
-        setPreviewIconKey(key);
-        localStorage.setItem('3d_glass_icon_key', key);
-        setIconVersion(Date.now());
-
-        const iconLink = document.querySelector("link[rel='icon']") as HTMLLinkElement;
-        const appleIconLink = document.querySelector("link[rel='apple-touch-icon']") as HTMLLinkElement;
-        const manifestLink = document.querySelector("link[rel='manifest']") as HTMLLinkElement;
-        
-        const buster = `?v=${Date.now()}`;
-        if (iconLink) iconLink.href = `/icon.png${buster}`;
-        if (appleIconLink) appleIconLink.href = `/icon.png${buster}`;
-        if (manifestLink) manifestLink.href = `/manifest.json${buster}`;
-
-        if ('caches' in window) {
-          try {
-            const cacheNames = await caches.keys();
-            for (const cacheName of cacheNames) {
-              const cache = await caches.open(cacheName);
-              await cache.delete('/icon.png');
-              await cache.delete('/manifest.json');
-              await cache.delete('/');
-              await cache.delete('/index.html');
-            }
-          } catch (err) {
-            console.warn('Cache purge bypassed:', err);
-          }
-        }
-
-        if ('serviceWorker' in navigator) {
-          try {
-            const registrations = await navigator.serviceWorker.getRegistrations();
-            for (const registration of registrations) {
-              await registration.unregister();
-            }
-            await navigator.serviceWorker.register('/sw.js');
-          } catch (err) {
-            console.warn('SW reset/re-register bypassed:', err);
-          }
-        }
-
-        showToast('🎨 앱 아이콘이 실시간으로 교체되었습니다!', 'success');
-      } else {
-        showToast('❌ 앱 아이콘 교체 처리에 실패했습니다.', 'error');
-      }
-    } catch (e) {
-      console.error(e);
-      showToast('❌ 서버 연결에 실패하여 아이콘을 적용하지 못했습니다.', 'error');
-    }
+  // Toast helper
+  const showToast = (text: string, type: 'success' | 'error' | 'info' = 'info') => {
+    setToastMessage({ text, type });
+    setTimeout(() => setToastMessage(null), 3000);
   };
 
-  const downloadIconAsFile = async (iconKey: string) => {
-    try {
-      showToast('📥 이미지 파일을 다운로드하는 중...', 'info');
-      let imageUrl = '';
-      let filename = 'app_icon.png';
-      
-      if (iconKey === 'original') {
-        imageUrl = '/icon_original.png';
-        filename = 'original_classic_icon.png';
-      } else {
-        imageUrl = `/icon_${iconKey}.jpg`;
-        filename = `${iconKey}_icon.jpg`;
-      }
-      
-      const response = await fetch(`${imageUrl}?v=${Date.now()}`);
-      if (!response.ok) throw new Error('파일 가져오기 실패');
-      
-      const blob = await response.blob();
-      const blobUrl = window.URL.createObjectURL(blob);
-      
-      const link = document.createElement('a');
-      link.href = blobUrl;
-      link.download = filename;
-      document.body.appendChild(link);
-      link.click();
-      document.body.removeChild(link);
-      window.URL.revokeObjectURL(blobUrl);
-      
-      showToast('📥 아이콘 파일 다운로드가 완료되었습니다!', 'success');
-    } catch (e) {
-      window.open(`/icon_${iconKey}.jpg`, '_blank');
-      showToast('💡 기기 보안 정책으로 새 탭에 아이콘이 열렸습니다. 저장해 주세요.', 'info');
-    }
+  // Save function
+  const saveTodos = (newTodos: Todo[]) => {
+    setTodos(newTodos);
+    localStorage.setItem('3d_glass_todos', JSON.stringify(newTodos));
+  };
+
+  // Mock confetti effect
+  const spawnConfetti = () => {
+    showToast('🎉 일정을 성공적으로 생성했습니다!', 'success');
   };
 
   const handleAddTodoFromAI = (suggestion: any) => {
@@ -285,3 +94,125 @@ export default function App() {
     spawnConfetti();
   };
 
+  useEffect(() => {
+    const saved = localStorage.getItem('3d_glass_todos');
+    if (saved) {
+      try { setTodos(JSON.parse(saved)); } catch(e) { console.error(e); }
+    }
+  }, []);
+
+  return (
+    <div className={`min-h-screen transition-colors duration-500 bg-slate-100 dark:bg-[#090d16] text-slate-800 dark:text-slate-100 relative overflow-hidden font-sans pb-12`}>
+      <BackgroundBlobs theme={theme} />
+      
+      {/* 🔮 수정된 3D 글래스모피즘 커스텀 헤더 영역 */}
+      <header className="max-w-7xl mx-auto px-4 pt-6 pb-2 relative z-10">
+        <div className="bg-white/40 dark:bg-slate-900/40 backdrop-blur-xl border border-white/40 dark:border-slate-800/40 rounded-2xl p-6 shadow-2xl flex flex-col md:flex-row items-center justify-between gap-4">
+          <div className="flex items-center gap-4">
+            {/* 🪐 입체적인 글래스 테마 아이콘 바인딩 */}
+            <div className="w-14 h-14 bg-gradient-to-tr from-emerald-400/30 to-teal-600/30 rounded-2xl flex items-center justify-center p-2 border border-white/50 shadow-inner group transition-transform duration-300 hover:scale-105">
+              <span className="text-3xl filter drop-shadow-[0_8px_12px_rgba(0,0,0,0.15)] select-none">🔮</span>
+            </div>
+            <div>
+              <h1 className="text-2xl font-black bg-gradient-to-r from-emerald-500 to-teal-400 bg-clip-text text-transparent tracking-tight">
+                3D Glassmorphic Planner
+              </h1>
+              <p className="text-xs text-slate-500 dark:text-slate-400 font-medium">
+                유리 질감의 입체 글래스모피즘 투두리스트 PWA 플래너
+              </p>
+            </div>
+          </div>
+
+          {/* 뷰 모드 컨트롤 버튼 스위처 */}
+          <div className="flex items-center gap-2 bg-slate-200/50 dark:bg-slate-800/50 p-1.5 rounded-xl border border-slate-300/30">
+            <button 
+              onClick={() => setMainViewMode('list')}
+              className={`px-3 py-1.5 rounded-lg text-xs font-bold transition-all duration-300 ${mainViewMode === 'list' ? 'bg-emerald-500 text-white shadow-lg' : 'hover:bg-slate-300/40'}`}
+            >
+              리스트 뷰
+            </button>
+            <button 
+              onClick={() => setMainViewMode('calendar')}
+              className={`px-3 py-1.5 rounded-lg text-xs font-bold transition-all duration-300 ${mainViewMode === 'calendar' ? 'bg-emerald-500 text-white shadow-lg' : 'hover:bg-slate-300/40'}`}
+            >
+              캘린더 뷰
+            </button>
+            <button 
+              onClick={() => setMainViewMode('category')}
+              className={`px-3 py-1.5 rounded-lg text-xs font-bold transition-all duration-300 ${mainViewMode === 'category' ? 'bg-emerald-500 text-white shadow-lg' : 'hover:bg-slate-300/40'}`}
+            >
+              칸반 보드
+            </button>
+            <button 
+              onClick={toggleTheme}
+              className="p-1.5 ml-2 bg-white/50 dark:bg-slate-700/50 rounded-lg hover:scale-105 transition-transform flex items-center justify-center"
+            >
+              {theme === 'light' ? <Moon size={16} /> : <Sun size={16} />}
+            </button>
+          </div>
+        </div>
+      </header>
+
+      {/* 대시보드 메인 본문 콘텐츠 */}
+      <main className="max-w-7xl mx-auto px-4 mt-6 relative z-10 grid grid-cols-1 lg:grid-cols-12 gap-6">
+        <div className="lg:col-span-4 flex flex-col gap-6">
+          <AddTodoForm onAddTodo={(todo) => saveTodos([todo, ...todos])} prefilledDate={prefilledCalendarDate} />
+          <TodoStats todos={todos} />
+        </div>
+
+        <div className="lg:col-span-8">
+          <AnimatePresence mode="wait">
+            {mainViewMode === 'list' && (
+              <motion.div key="list" initial={{ opacity: 0, y: 15 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -15 }}>
+                <div className="space-y-4">
+                  {todos.filter(t => {
+                    if (statusFilter === 'Completed') return t.completed;
+                    if (statusFilter === 'Active') return !t.completed;
+                    return true;
+                  }).map(todo => (
+                    <TodoCard 
+                      key={todo.id} 
+                      todo={todo} 
+                      onToggle={() => saveTodos(todos.map(t => t.id === todo.id ? {...t, completed: !t.completed} : t))}
+                      onDelete={() => saveTodos(todos.filter(t => t.id !== todo.id))}
+                      onEdit={() => {}}
+                    />
+                  ))}
+                  {todos.length === 0 && (
+                    <div className="text-center py-12 bg-white/20 dark:bg-slate-900/20 backdrop-blur border border-dashed rounded-xl border-slate-300/50">
+                      <p className="text-sm text-slate-400">등록된 플래너 일정이 없습니다. 일정을 추가해보세요!</p>
+                    </div>
+                  )}
+                </div>
+              </motion.div>
+            )}
+
+            {mainViewMode === 'calendar' && (
+              <motion.div key="calendar" initial={{ opacity: 0, y: 15 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -15 }}>
+                <CalendarView todos={todos} onSelectDate={(date) => { setPrefilledCalendarDate(date); setMainViewMode('list'); }} />
+              </motion.div>
+            )}
+
+            {mainViewMode === 'category' && (
+              <motion.div key="category" initial={{ opacity: 0, y: 15 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -15 }}>
+                <CategoryView todos={todos} onUpdateTodos={saveTodos} />
+              </motion.div>
+            )}
+          </AnimatePresence>
+          
+          <div className="mt-8">
+            <HealingJournalSection onAddSuggestion={handleAddTodoFromAI} />
+          </div>
+        </div>
+      </main>
+
+      {/* 토스트 알림 컴포넌트 피드 */}
+      {toastMessage && (
+        <div className="fixed bottom-5 right-5 z-50 bg-slate-900 text-white px-4 py-2.5 rounded-xl shadow-2xl text-xs font-bold border border-slate-700/50 flex items-center gap-2">
+          <Sparkles size={14} className="text-emerald-400" />
+          {toastMessage.text}
+        </div>
+      )}
+    </div>
+  );
+}

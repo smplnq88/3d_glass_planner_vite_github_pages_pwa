@@ -1,10 +1,10 @@
 {
-  "id": "/?source=pwa",
+  "id": "./?source=pwa",
   "name": "3D Glassmorphic Planner",
   "short_name": "3D Planner",
   "description": "3D 입체 글래스모피즘 스타일의 일정 및 하루 목표 플래너",
-  "start_url": "/",
-  "scope": "/",
+  "start_url": "./",
+  "scope": "./",
   "display": "standalone",
   "display_override": ["window-controls-overlay", "standalone", "minimal-ui"],
   "orientation": "portrait",
@@ -14,19 +14,19 @@
   "categories": ["productivity", "utilities", "lifestyle"],
   "icons": [
     {
-      "src": "/icon-192x192.png",
+      "src": "./icon-192x192.png",
       "type": "image/png",
       "sizes": "192x192",
       "purpose": "any"
     },
     {
-      "src": "/icon-512x512.png",
+      "src": "./icon-512x512.png",
       "type": "image/png",
       "sizes": "512x512",
       "purpose": "any"
     },
     {
-      "src": "/icon-512x512.png",
+      "src": "./icon-512x512.png",
       "type": "image/png",
       "sizes": "512x512",
       "purpose": "maskable"
