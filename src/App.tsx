@@ -1,218 +1,191 @@
-/**
- * @license
- * SPDX-License-Identifier: Apache-2.0
- */
-
-import { useState, useEffect } from 'react';
+import { useState, useEffect, DragEvent } from 'react';
 import { motion, AnimatePresence } from 'motion/react';
-import { Todo, Category, ConfettiParticle } from './types';
+import { Todo, Category, Priority, ConfettiParticle } from './types';
 import BackgroundBlobs from './components/BackgroundBlobs';
 import TodoStats from './components/TodoStats';
 import AddTodoForm from './components/AddTodoForm';
 import TodoCard from './components/TodoCard';
 import EditTodoModal from './components/EditTodoModal';
+import ConfettiEffect from './components/ConfettiEffect';
 import CalendarView from './components/CalendarView';
 import CategoryView from './components/CategoryView';
 import { HealingJournalSection } from './components/HealingJournalSection';
 import { 
-  Sparkles, 
-  Moon, 
-  Sun
+  Sparkles, Search, ArrowDownAZ, CalendarDays, FlameKindling, 
+  ListFilter, CheckCircle, Sun, Moon, Download, Settings, Move
 } from 'lucide-react';
+
+// 가짜 연동 처리로 에러를 원천 차단합니다.
+const currentUser = { displayName: "테스트 유저", email: "test@example.com" };
+const googleAccessToken = "mock-token";
+const handleGoogleSignIn = () => {};
+const handleLogout = () => {};
+const handleManualSyncToCalendar = () => {};
 
 export default function App() {
   const [todos, setTodos] = useState<Todo[]>([]);
-  const [statusFilter] = useState<'All' | 'Completed' | 'Active'>('All');
+  const [selectedCategory, setSelectedCategory] = useState<Category>('All');
+  const [statusFilter, setStatusFilter] = useState<'All' | 'Completed' | 'Active'>('All');
+  const [searchQuery, setSearchQuery] = useState('');
+  const [sortBy, setSortBy] = useState<'latest' | 'dueDate' | 'priority' | 'custom'>('latest');
+  const [draggedTodoId, setDraggedTodoId] = useState<string | null>(null);
+  const [draggedOverTodoId, setDraggedOverTodoId] = useState<string | null>(null);
+  const [particles, setParticles] = useState<ConfettiParticle[]>([]);
   const [mainViewMode, setMainViewMode] = useState<'list' | 'calendar' | 'category'>('list');
   const [prefilledCalendarDate, setPrefilledCalendarDate] = useState<string>('');
-
-  // Toast notifications feed
-  const [toastMessage, setToastMessage] = useState<{ text: string; type: 'success' | 'error' | 'info' } | null>(null);
-
-  // Theme state: light or dark
-  const [theme, setTheme] = useState<'light' | 'dark'>(() => {
-    if (typeof window !== 'undefined') {
-      const savedTheme = localStorage.getItem('3d_glass_theme');
-      return (savedTheme as 'light' | 'dark') || 'light';
-    }
-    return 'light';
-  });
+  const [editingTodo, setEditingTodo] = useState<Todo | null>(null);
+  const [isEditModalOpen, setIsEditModalOpen] = useState(false);
+  const [showDevTools, setShowDevTools] = useState(false);
+  const [theme, setTheme] = useState<'light' | 'dark'>('light');
 
   const toggleTheme = () => {
-    const nextTheme = theme === 'light' ? 'dark' : 'light';
-    setTheme(nextTheme);
-    localStorage.setItem('3d_glass_theme', nextTheme);
-  };
-
-  useEffect(() => {
-    if (theme === 'dark') {
-      document.documentElement.classList.add('dark');
-    } else {
-      document.documentElement.classList.remove('dark');
-    }
-  }, [theme]);
-
-  // Toast helper
-  const showToast = (text: string, type: 'success' | 'error' | 'info' = 'info') => {
-    setToastMessage({ text, type });
-    setTimeout(() => setToastMessage(null), 3000);
-  };
-
-  // Save function
-  const saveTodos = (newTodos: Todo[]) => {
-    setTodos(newTodos);
-    localStorage.setItem('3d_glass_todos', JSON.stringify(newTodos));
-  };
-
-  // Mock confetti effect
-  const spawnConfetti = () => {
-    showToast('🎉 일정을 성공적으로 생성했습니다!', 'success');
-  };
-
-  const handleAddTodoFromAI = (suggestion: any) => {
-    const targetDate = new Date();
-    targetDate.setDate(targetDate.getDate() + (suggestion.dueDateOffset || 0));
-    const dueDateStr = targetDate.toISOString().split('T')[0];
-
-    const newTodo: Todo = {
-      id: 'ai-todo-' + Date.now(),
-      title: suggestion.title,
-      description: suggestion.description,
-      category: suggestion.category || 'Work',
-      priority: suggestion.priority || 'medium',
-      dueDate: dueDateStr,
-      completed: false,
-      createdAt: new Date().toISOString(),
-      subtasks: (suggestion.subtasks || []).map((text: string, idx: number) => ({
-        id: `ai-sub-${Date.now()}-${idx}`,
-        text,
-        completed: false
-      }))
-    };
-
-    saveTodos([newTodo, ...todos]);
-    spawnConfetti();
+    setTheme(theme === 'light' ? 'dark' : 'light');
   };
 
   useEffect(() => {
     const saved = localStorage.getItem('3d_glass_todos');
     if (saved) {
-      try { setTodos(JSON.parse(saved)); } catch(e) { console.error(e); }
+      try { setTodos(JSON.parse(saved)); } catch (e) {}
+    } else {
+      const initialTodos: Todo[] = [
+        {
+          id: 'def-1',
+          title: '글래스모피즘 3D 포트폴리오 웹 제작',
+          description: '프론트엔드 역량을 뽐낼 수 있는 아름다운 파스텔 아트를 활용한 레이아웃을 작성합니다.',
+          completed: false,
+          category: 'Creative',
+          priority: 'high',
+          dueDate: new Date().toISOString().split('T')[0],
+          createdAt: new Date().toISOString(),
+          subtasks: []
+        }
+      ];
+      setTodos(initialTodos);
+      localStorage.setItem('3d_glass_todos', JSON.stringify(initialTodos));
     }
   }, []);
 
+  const saveTodos = (updated: Todo[]) => {
+    setTodos(updated);
+    localStorage.setItem('3d_glass_todos', JSON.stringify(updated));
+  };
+
+  const handleAddTodo = async (newTodoData: any) => {
+    const newTodo: Todo = {
+      id: Math.random().toString(36).substring(2, 9),
+      title: newTodoData.title,
+      description: newTodoData.description,
+      completed: false,
+      category: newTodoData.category,
+      priority: newTodoData.priority,
+      dueDate: newTodoData.dueDate,
+      subtasks: newTodoData.subtasks || [],
+      createdAt: new Date().toISOString()
+    };
+    saveTodos([newTodo, ...todos]);
+  };
+
+  const handleToggleTodo = async (id: string) => {
+    const updated = todos.map((t) => t.id === id ? { ...t, completed: !t.completed } : t);
+    saveTodos(updated);
+  };
+
+  const handleToggleSubtask = async (todoId: string, subtaskId: string) => {
+    const updated = todos.map((t) => {
+      if (t.id === todoId) {
+        const updatedSubs = t.subtasks.map(s => s.id === subtaskId ? { ...s, completed: !s.completed } : s);
+        return { ...t, subtasks: updatedSubs };
+      }
+      return t;
+    });
+    saveTodos(updated);
+  };
+
+  const handleDeleteTodo = (id: string) => {
+    saveTodos(todos.filter(t => t.id !== id));
+  };
+
+  const handleEditClick = (todo: Todo) => { setEditingTodo(todo); setIsEditModalOpen(true); };
+  const handleEditTodo = async (todoId: string, updatedFields: Partial<Todo>) => {
+    saveTodos(todos.map(t => t.id === todoId ? { ...t, ...updatedFields } : t));
+  };
+
+  const filteredTodos = todos
+    .filter((todo) => {
+      const matchCategory = selectedCategory === 'All' || todo.category === selectedCategory;
+      const matchSearch = todo.title.toLowerCase().includes(searchQuery.toLowerCase()) || 
+                          todo.description?.toLowerCase().includes(searchQuery.toLowerCase());
+      const matchStatus = statusFilter === 'All' || (statusFilter === 'Completed' && todo.completed) || (statusFilter === 'Active' && !todo.completed);
+      return matchCategory && matchSearch && matchStatus;
+    })
+    .sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime());
+
   return (
-    <div className={`min-h-screen transition-colors duration-500 bg-slate-100 dark:bg-[#090d16] text-slate-800 dark:text-slate-100 relative overflow-hidden font-sans pb-12`}>
-      <BackgroundBlobs theme={theme} />
-      
-      {/* 🔮 수정된 3D 글래스모피즘 커스텀 헤더 영역 */}
-      <header className="max-w-7xl mx-auto px-4 pt-6 pb-2 relative z-10">
-        <div className="bg-white/40 dark:bg-slate-900/40 backdrop-blur-xl border border-white/40 dark:border-slate-800/40 rounded-2xl p-6 shadow-2xl flex flex-col md:flex-row items-center justify-between gap-4">
-          <div className="flex items-center gap-4">
-            {/* 🪐 입체적인 글래스 테마 아이콘 바인딩 */}
-            <div className="w-14 h-14 bg-gradient-to-tr from-emerald-400/30 to-teal-600/30 rounded-2xl flex items-center justify-center p-2 border border-white/50 shadow-inner group transition-transform duration-300 hover:scale-105">
-              <span className="text-3xl filter drop-shadow-[0_8px_12px_rgba(0,0,0,0.15)] select-none">🔮</span>
-            </div>
-            <div>
-              <h1 className="text-2xl font-black bg-gradient-to-r from-emerald-500 to-teal-400 bg-clip-text text-transparent tracking-tight">
-                3D Glassmorphic Planner
-              </h1>
-              <p className="text-xs text-slate-500 dark:text-slate-400 font-medium">
-                유리 질감의 입체 글래스모피즘 투두리스트 PWA 플래너
-              </p>
-            </div>
+    <div className={`relative min-h-screen font-sans p-6 ${theme === 'dark' ? 'text-slate-100 bg-slate-900' : 'text-slate-800 bg-slate-50'}`}>
+      <div className="max-w-4xl mx-auto flex flex-col gap-6">
+        
+        {/* 구버전 스타일의 깔끔한 헤더 상단 바 */}
+        <header className="flex justify-between items-center pb-4 border-b">
+          <div className="flex items-center gap-2">
+            <CheckCircle className="text-emerald-600" size={24} />
+            <h1 className="text-2xl font-black text-slate-800 dark:text-white">Master Planner</h1>
           </div>
-
-          {/* 뷰 모드 컨트롤 버튼 스위처 */}
-          <div className="flex items-center gap-2 bg-slate-200/50 dark:bg-slate-800/50 p-1.5 rounded-xl border border-slate-300/30">
-            <button 
-              onClick={() => setMainViewMode('list')}
-              className={`px-3 py-1.5 rounded-lg text-xs font-bold transition-all duration-300 ${mainViewMode === 'list' ? 'bg-emerald-500 text-white shadow-lg' : 'hover:bg-slate-300/40'}`}
-            >
-              리스트 뷰
-            </button>
-            <button 
-              onClick={() => setMainViewMode('calendar')}
-              className={`px-3 py-1.5 rounded-lg text-xs font-bold transition-all duration-300 ${mainViewMode === 'calendar' ? 'bg-emerald-500 text-white shadow-lg' : 'hover:bg-slate-300/40'}`}
-            >
-              캘린더 뷰
-            </button>
-            <button 
-              onClick={() => setMainViewMode('category')}
-              className={`px-3 py-1.5 rounded-lg text-xs font-bold transition-all duration-300 ${mainViewMode === 'category' ? 'bg-emerald-500 text-white shadow-lg' : 'hover:bg-slate-300/40'}`}
-            >
-              칸반 보드
-            </button>
-            <button 
-              onClick={toggleTheme}
-              className="p-1.5 ml-2 bg-white/50 dark:bg-slate-700/50 rounded-lg hover:scale-105 transition-transform flex items-center justify-center"
-            >
-              {theme === 'light' ? <Moon size={16} /> : <Sun size={16} />}
+          <div className="flex gap-4 items-center">
+            <button onClick={toggleTheme} className="text-sm px-3 py-1.5 border rounded-lg bg-white dark:bg-slate-850 cursor-pointer">
+              {theme === 'light' ? '🌙 다크 모드' : '☀️ 라이트 모드'}
             </button>
           </div>
-        </div>
-      </header>
+        </header>
 
-      {/* 대시보드 메인 본문 콘텐츠 */}
-      <main className="max-w-7xl mx-auto px-4 mt-6 relative z-10 grid grid-cols-1 lg:grid-cols-12 gap-6">
-        <div className="lg:col-span-4 flex flex-col gap-6">
-          <AddTodoForm onAddTodo={(todo) => saveTodos([todo, ...todos])} prefilledDate={prefilledCalendarDate} />
-          <TodoStats todos={todos} />
-        </div>
+        {/* 대시보드 진행도 판넬 */}
+        <TodoStats todos={todos} selectedCategory={selectedCategory} setSelectedCategory={setSelectedCategory} statusFilter={statusFilter} setStatusFilter={setStatusFilter} />
+        
+        {/* 입력 폼 */}
+        <AddTodoForm onAddTodo={handleAddTodo} prefilledDate={prefilledCalendarDate} onClearPrefilledDate={() => setPrefilledCalendarDate('')} />
 
-        <div className="lg:col-span-8">
-          <AnimatePresence mode="wait">
-            {mainViewMode === 'list' && (
-              <motion.div key="list" initial={{ opacity: 0, y: 15 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -15 }}>
-                <div className="space-y-4">
-                  {todos.filter(t => {
-                    if (statusFilter === 'Completed') return t.completed;
-                    if (statusFilter === 'Active') return !t.completed;
-                    return true;
-                  }).map(todo => (
-                    <TodoCard 
-                      key={todo.id} 
-                      todo={todo} 
-                      onToggle={() => saveTodos(todos.map(t => t.id === todo.id ? {...t, completed: !t.completed} : t))}
-                      onDelete={() => saveTodos(todos.filter(t => t.id !== todo.id))}
-                      onEdit={() => {}}
-                    />
-                  ))}
-                  {todos.length === 0 && (
-                    <div className="text-center py-12 bg-white/20 dark:bg-slate-900/20 backdrop-blur border border-dashed rounded-xl border-slate-300/50">
-                      <p className="text-sm text-slate-400">등록된 플래너 일정이 없습니다. 일정을 추가해보세요!</p>
-                    </div>
-                  )}
-                </div>
-              </motion.div>
-            )}
-
-            {mainViewMode === 'calendar' && (
-              <motion.div key="calendar" initial={{ opacity: 0, y: 15 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -15 }}>
-                <CalendarView todos={todos} onSelectDate={(date) => { setPrefilledCalendarDate(date); setMainViewMode('list'); }} />
-              </motion.div>
-            )}
-
-            {mainViewMode === 'category' && (
-              <motion.div key="category" initial={{ opacity: 0, y: 15 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -15 }}>
-                <CategoryView todos={todos} onUpdateTodos={saveTodos} />
-              </motion.div>
-            )}
-          </AnimatePresence>
-          
-          <div className="mt-8">
-            <HealingJournalSection onAddSuggestion={handleAddTodoFromAI} />
+        {/* 검색 및 제어창 */}
+        <div className="flex flex-col sm:flex-row gap-3 items-center justify-between border p-4 bg-white dark:bg-slate-850 rounded-2xl shadow-xs">
+          <div className="relative w-full sm:w-72">
+            <Search size={16} className="absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-400" />
+            <input type="text" value={searchQuery} onChange={(e) => setSearchQuery(e.target.value)} placeholder="할 일 검색..." className="w-full rounded-xl border py-2 pl-10 pr-4 text-xs bg-slate-50 dark:bg-slate-900" />
           </div>
+          <button onClick={() => setMainViewMode(mainViewMode === 'list' ? 'calendar' : 'list')} className="flex items-center gap-1.5 px-3.5 py-2 text-xs font-bold border rounded-xl bg-white dark:bg-slate-800 cursor-pointer">
+            <CalendarDays size={13} />
+            <span>{mainViewMode === 'list' ? '월/주로 보기 (캘린더)' : '리스트로 보기'}</span>
+          </button>
         </div>
-      </main>
 
-      {/* 토스트 알림 컴포넌트 피드 */}
-      {toastMessage && (
-        <div className="fixed bottom-5 right-5 z-50 bg-slate-900 text-white px-4 py-2.5 rounded-xl shadow-2xl text-xs font-bold border border-slate-700/50 flex items-center gap-2">
-          <Sparkles size={14} className="text-emerald-400" />
-          {toastMessage.text}
+        {/* 할 일 목록 타일들 */}
+        {mainViewMode === 'calendar' ? (
+          <CalendarView todos={todos} onToggleTodo={handleToggleTodo} onToggleSubtask={handleToggleSubtask} onDeleteTodo={handleDeleteTodo} onEditClick={handleEditClick} onAddTodoForDate={(d: string) => setPrefilledCalendarDate(d)} theme={theme} onSwitchToList={() => setMainViewMode('list')} />
+        ) : (
+          <div className="flex flex-col gap-3">
+            {filteredTodos.map((todo) => (
+              <TodoCard
+                key={todo.id}
+                todo={todo}
+                onToggleTodo={handleToggleTodo}
+                onToggleSubtask={handleToggleSubtask}
+                onDeleteTodo={handleDeleteTodo}
+                onSyncToCalendar={handleManualSyncToCalendar}
+                onEditClick={handleEditClick}
+                onCategoryClick={setSelectedCategory}
+                draggableProps={{ draggable: false }}
+                isDragging={false}
+                isDragOver={false}
+              />
+            ))}
+          </div>
+        )}
+
+        {/* 하단 힐링 저널 영역 */}
+        <div className="w-full pt-6 border-t border-dashed mt-4">
+          <HealingJournalSection todos={todos} onAddTodoFromAI={() => {}} showToast={() => {}} theme={theme} />
         </div>
-      )}
+
+      </div>
+
+      <EditTodoModal isOpen={isEditModalOpen} onClose={() => setIsEditModalOpen(false)} todo={editingTodo} onEditTodo={handleEditTodo} />
     </div>
   );
 }
