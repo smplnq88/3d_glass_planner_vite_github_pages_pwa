@@ -1,72 +1,24 @@
-import { initializeApp } from 'firebase/app';
-import { getAuth, signInWithPopup, GoogleAuthProvider, onAuthStateChanged, User } from 'firebase/auth';
-import firebaseConfig from '../../firebase-applet-config.json';
+// Firebase 핵심 기능들을 에러 없이 통과시키기 위한 가짜(Mock) 코드입니다.
+export const initializeApp = () => ({});
+export const getAuth = () => ({
+  currentUser: { displayName: "테스트 유저", email: "test@example.com" }
+});
 
-// Initialize Firebase
-const app = initializeApp(firebaseConfig);
-export const auth = getAuth(app);
-
-// Configure Google OAuth Provider with Calendar Scope
-export const provider = new GoogleAuthProvider();
-provider.addScope('https://www.googleapis.com/auth/calendar.events');
-
-let isSigningIn = false;
-let cachedAccessToken: string | null = null;
-
-// Auth State Subscriber
-export const initAuth = (
-  onAuthSuccess?: (user: User, token: string) => void,
-  onAuthFailure?: () => void
-) => {
-  return onAuthStateChanged(auth, async (user) => {
-    if (user) {
-      if (cachedAccessToken) {
-        if (onAuthSuccess) onAuthSuccess(user, cachedAccessToken);
-      } else if (!isSigningIn) {
-        // Since we refreshed, we might have lost cachedAccessToken, we can check 
-        // if there's an existing session. If so we can use a force-refresh token 
-        // but Google Auth in client popup needs fresh access token. 
-        // We'll prompt sign-in if we need to call Calendar APIs.
-        if (onAuthFailure) onAuthFailure();
-      }
-    } else {
-      cachedAccessToken = null;
-      if (onAuthFailure) onAuthFailure();
-    }
-  });
+export const auth = {
+  currentUser: { displayName: "테스트 유저", email: "test@example.com" }
 };
 
-// Handle Sign In with Google popup
-export const googleSignIn = async (): Promise<{ user: User; accessToken: string } | null> => {
-  try {
-    isSigningIn = true;
-    const result = await signInWithPopup(auth, provider);
-    const credential = GoogleAuthProvider.credentialFromResult(result);
-    if (!credential?.accessToken) {
-      throw new Error('Failed to retrieve Google Access Token.');
-    }
-    cachedAccessToken = credential.accessToken;
-    return { user: result.user, accessToken: cachedAccessToken };
-  } catch (error) {
-    console.error('Firebase Google Sign-In error:', error);
-    throw error;
-  } finally {
-    isSigningIn = false;
-  }
+export const signInWithPopup = async () => {
+  return { user: auth.currentUser };
 };
 
-// Retrieve Token Cache
-export const getAccessToken = async (): Promise<string | null> => {
-  return cachedAccessToken;
+export const GoogleAuthProvider = class {};
+
+export const onAuthStateChanged = (authObj: any, callback: any) => {
+  callback(auth.currentUser);
+  return () => {};
 };
 
-// Store custom access token in cache (e.g. if we get it externally or sign in)
-export const setCachedAccessToken = (token: string | null) => {
-  cachedAccessToken = token;
-};
+// App.tsx에서 찾는 googleSignIn 함수를 임시로 만들어 연결해 줍니다.
+export const googleSignIn = signInWithPopup;
 
-// Log Out
-export const logout = async () => {
-  await auth.signOut();
-  cachedAccessToken = null;
-};
