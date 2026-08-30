@@ -4,7 +4,7 @@
  */
 
 import JSZip from 'jszip';
-import { CUBE_ICON_DATA } from '../iconData';
+import { CUBE_ICON_DATA, getAssetUrl } from '../iconData';
 
 /**
  * Trigger browser file download from Blob
@@ -25,7 +25,8 @@ export function triggerBlobDownload(blob: Blob, filename: string) {
  */
 async function fetchAssetBlob(url: string): Promise<Blob | null> {
   try {
-    const response = await fetch(url);
+    const resolvedUrl = getAssetUrl(url);
+    const response = await fetch(resolvedUrl);
     if (!response.ok) return null;
     return await response.blob();
   } catch (err) {

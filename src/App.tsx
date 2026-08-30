@@ -68,7 +68,14 @@ import {
   playAlarmSound 
 } from './lib/alarmAudio';
 import { User } from 'firebase/auth';
-import { CUBE_ICON_DATA } from './iconData';
+import { 
+  CUBE_ICON_DATA,
+  ORIGINAL_ICON_DATA,
+  LOTUS_ICON_DATA,
+  NEBULA_ICON_DATA,
+  AURORA_ICON_DATA,
+  getAssetUrl 
+} from './iconData';
 
 export default function App() {
   const [todos, setTodos] = useState<Todo[]>([]);
@@ -230,24 +237,25 @@ export default function App() {
       let filename = 'app_icon.png';
       
       if (iconKey === 'original') {
-        imageUrl = '/icon_original.png';
+        imageUrl = getAssetUrl('icon_original.png');
         filename = 'original_classic_icon.png';
       } else if (iconKey === 'emerald_lotus') {
-        imageUrl = '/icon_emerald_lotus.jpg';
+        imageUrl = getAssetUrl('icon_emerald_lotus.jpg');
         filename = 'emerald_lotus_icon.jpg';
       } else if (iconKey === 'cosmic_nebula') {
-        imageUrl = '/icon_cosmic_nebula.jpg';
+        imageUrl = getAssetUrl('icon_cosmic_nebula.jpg');
         filename = 'cosmic_nebula_icon.jpg';
       } else if (iconKey === 'polar_aurora') {
-        imageUrl = '/icon_polar_aurora.jpg';
+        imageUrl = getAssetUrl('icon_polar_aurora.jpg');
         filename = 'polar_aurora_icon.jpg';
       } else {
-        imageUrl = '/icon.png';
+        imageUrl = getAssetUrl('icon.png');
         filename = 'active_app_icon.png';
       }
       
-      // Append cache-busting query to avoid cache policy blocks or proxy caching
-      const response = await fetch(`${imageUrl}?v=${Date.now()}`);
+      // Append cache-busting query if not data URI
+      const finalFetchUrl = imageUrl.startsWith('data:') ? imageUrl : `${imageUrl}${imageUrl.includes('?') ? '&' : '?'}v=${Date.now()}`;
+      const response = await fetch(finalFetchUrl);
       if (!response.ok) throw new Error('파일 가져오기 실패');
       
       const blob = await response.blob();
@@ -1937,28 +1945,28 @@ export default function App() {
                       { 
                         key: 'original', 
                         name: '오리지널 클래식', 
-                        url: '/icon_original.png', 
+                        url: ORIGINAL_ICON_DATA || getAssetUrl('icon_original.png'), 
                         desc: '단정하고 직관적인 오리지널 파스텔 글래스모피즘',
                         badge: '기본 테마'
                       },
                       { 
                         key: 'emerald_lotus', 
                         name: '에메랄드 로터스', 
-                        url: '/icon_emerald_lotus.jpg', 
+                        url: LOTUS_ICON_DATA || getAssetUrl('icon_emerald_lotus.jpg'), 
                         desc: '네온 에메랄드 & 아쿠아마린 로터스 플라워 모티브',
                         badge: '차분함 & 치유'
                       },
                       { 
                         key: 'cosmic_nebula', 
                         name: '코스믹 네뷸라', 
-                        url: '/icon_cosmic_nebula.jpg', 
+                        url: NEBULA_ICON_DATA || getAssetUrl('icon_cosmic_nebula.jpg'), 
                         desc: '무한 자색 은하의 깊은 오로라 질감과 3D 기하학',
                         badge: '창의성 & 몰입'
                       },
                       { 
                         key: 'polar_aurora', 
                         name: '폴라 오로라', 
-                        url: '/icon_polar_aurora.jpg', 
+                        url: AURORA_ICON_DATA || getAssetUrl('icon_polar_aurora.jpg'), 
                         desc: '아이스 코발트 블루와 민트 크리스탈의 하이테크 질감',
                         badge: '생산성'
                       }
@@ -2115,6 +2123,31 @@ export default function App() {
                       <span className="text-[8.5px] opacity-80">패치/업데이트용</span>
                     </button>
                   </div>
+
+                  <div className="mt-3 p-3 rounded-xl bg-slate-900 text-slate-200 border border-slate-700/70 text-[10px]">
+                    <div className="flex items-center justify-between mb-1.5 font-bold text-emerald-400">
+                      <span>⚡ 내 저장소에 바로 올리는 Git 명령어 (smplnq88)</span>
+                      <button
+                        type="button"
+                        onClick={() => {
+                          const cmd = `git init\ngit add .\ngit commit -m "feat: Deploy 3D Glassmorphic Planner PWA to GitHub Pages"\ngit branch -M main\ngit remote add origin https://github.com/smplnq88/3d_glass_planner_vite_github_pages_pwa.git\ngit push -u origin main`;
+                          navigator.clipboard.writeText(cmd);
+                          showToast('📋 Git 명령어가 클립보드에 복사되었습니다!', 'success');
+                        }}
+                        className="px-2 py-0.5 rounded bg-emerald-500/20 hover:bg-emerald-500/30 text-emerald-300 font-bold text-[9px] cursor-pointer transition-all active:scale-95"
+                      >
+                        명령어 전체 복사
+                      </button>
+                    </div>
+                    <pre className="font-mono text-[9px] text-slate-300 overflow-x-auto p-2 bg-slate-950/80 rounded-lg select-all">
+{`git init
+git add .
+git commit -m "feat: Deploy 3D Glassmorphic Planner PWA to GitHub Pages"
+git branch -M main
+git remote add origin https://github.com/smplnq88/3d_glass_planner_vite_github_pages_pwa.git
+git push -u origin main`}
+                    </pre>
+                  </div>
                 </div>
 
                 {/* 4. 💾 데이터 백업 및 복원 */}
@@ -2216,7 +2249,7 @@ export default function App() {
                   {/* Glass shell holding favicon icon */}
                   <div className="relative h-20 w-20 rounded-2xl overflow-hidden border border-white/60 dark:border-white/10 shadow-lg flex items-center justify-center bg-white/70 dark:bg-slate-950/70 p-1 backdrop-blur-xs">
                     <img
-                      src="./icon-512x512/"
+                      src={CUBE_ICON_DATA || getAssetUrl('icon-512x512.png')}
                       alt="3D Glassmorphic App Icon"
                       className="w-full h-full object-cover rounded-xl"
                       referrerPolicy="no-referrer"
@@ -2385,7 +2418,8 @@ export default function App() {
                       GitHub Pages 배포 및 PWA 설치에 필요한 정비율 아이콘 이미지 파일(PNG)과 전체 아이콘 압축팩을 원클릭으로 바로 다운로드합니다.
                     </p>
                     <div className="grid grid-cols-1 sm:grid-cols-3 gap-2 mb-3">
-                      <a href="icon-192x192.png"
+                      <a
+                        href={getAssetUrl('icon-192x192.png')}
                         download="icon-192x192.png"
                         className="py-2 px-2.5 rounded-lg border border-emerald-500/50 hover:bg-emerald-500/10 text-emerald-700 dark:text-emerald-400 font-black text-[9.5px] bg-white dark:bg-slate-900 shadow-xs transition-all flex items-center justify-center gap-1 active:scale-95 text-center no-underline"
                         id="download-btn-192"
@@ -2393,7 +2427,8 @@ export default function App() {
                         <Download size={10} className="stroke-[2.5]" />
                         <span>icon-192x192.png</span>
                       </a>
-                      <a href="icon-512x512.png"
+                      <a
+                        href={getAssetUrl('icon-512x512.png')}
                         download="icon-512x512.png"
                         className="py-2 px-2.5 rounded-lg border border-emerald-500/50 hover:bg-emerald-500/10 text-emerald-700 dark:text-emerald-400 font-black text-[9.5px] bg-white dark:bg-slate-900 shadow-xs transition-all flex items-center justify-center gap-1 active:scale-95 text-center no-underline"
                         id="download-btn-512"

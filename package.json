@@ -5,7 +5,7 @@
   "type": "module",
   "scripts": {
     "dev": "tsx server.ts",
-    "build": "vite build",
+    "build": "vite build && esbuild server.ts --bundle --platform=node --format=cjs --packages=external --sourcemap --outfile=dist/server.cjs && node scripts/package_pwa.cjs",
     "build:client": "vite build",
     "build:gh-pages": "vite build && node scripts/package_pwa.cjs",
     "package:pwa": "node scripts/package_pwa.cjs",
@@ -38,7 +38,6 @@
     "tailwindcss": "^4.1.14",
     "tsx": "^4.21.0",
     "typescript": "~5.8.2",
-    "vite": "^6.2.3",
-    "vite-plugin-pwa": "^1.3.0"
+    "vite": "^6.2.3"
   }
 }

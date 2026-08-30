@@ -39,7 +39,7 @@ jobs:
         run: npm ci || npm install
 
       - name: Build Vite PWA for GitHub Pages
-        run: npm run build
+        run: npm run build:gh-pages
 
       - name: Ensure 404.html fallback exists in dist
         run: |
@@ -50,7 +50,7 @@ jobs:
       - name: Setup GitHub Pages
         uses: actions/configure-pages@v5
 
-      - name: Upload Artifact
+      - name: Upload Pages Build Artifact
         uses: actions/upload-pages-artifact@v3
         with:
           path: './dist'

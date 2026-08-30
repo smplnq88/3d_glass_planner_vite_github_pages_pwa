@@ -5,7 +5,7 @@ import {defineConfig} from 'vite';
 
 export default defineConfig(() => {
   return {
-    base: '/3d_glass_planner_vite_github_pages_pwa/',
+    base: './',
     plugins: [react(), tailwindcss()],
     resolve: {
       alias: {
