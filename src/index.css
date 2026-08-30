@@ -313,7 +313,6 @@ input, textarea, select, button {
 }
 
 /* Monthly picker internal elements */
-.dark .bg-white.p-2.5.rounded-xl.border.border-slate-200\/50,
 .dark #monthly-day-picker-confirmed-view,
 .dark #edit-monthly-day-picker-confirmed-view {
   background-color: rgba(28, 18, 14, 0.65) !important;

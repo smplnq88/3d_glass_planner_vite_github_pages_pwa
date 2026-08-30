@@ -29,13 +29,13 @@ jobs:
       - name: Setup Node.js Environment
         uses: actions/setup-node@v4
         with:
-          node-version: 20
+          node-version: 22
 
       - name: Install Dependencies
         run: npm install
 
       - name: Build Vite PWA for GitHub Pages
-        run: npm run build:client
+        run: npx vite build
 
       - name: Ensure 404.html fallback exists in dist
         run: |
