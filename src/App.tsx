@@ -2385,7 +2385,7 @@ export default function App() {
                       GitHub Pages 배포 및 PWA 설치에 필요한 정비율 아이콘 이미지 파일(PNG)과 전체 아이콘 압축팩을 원클릭으로 바로 다운로드합니다.
                     </p>
                     <div className="grid grid-cols-1 sm:grid-cols-3 gap-2 mb-3">
-                      <a href="./icon-192x192.png/"
+                      <a href="icon-192x192.png"
                         download="icon-192x192.png"
                         className="py-2 px-2.5 rounded-lg border border-emerald-500/50 hover:bg-emerald-500/10 text-emerald-700 dark:text-emerald-400 font-black text-[9.5px] bg-white dark:bg-slate-900 shadow-xs transition-all flex items-center justify-center gap-1 active:scale-95 text-center no-underline"
                         id="download-btn-192"
@@ -2393,8 +2393,7 @@ export default function App() {
                         <Download size={10} className="stroke-[2.5]" />
                         <span>icon-192x192.png</span>
                       </a>
-                      <a
-                        href="./icon-512x512.png/"
+                      <a href="icon-512x512.png"
                         download="icon-512x512.png"
                         className="py-2 px-2.5 rounded-lg border border-emerald-500/50 hover:bg-emerald-500/10 text-emerald-700 dark:text-emerald-400 font-black text-[9.5px] bg-white dark:bg-slate-900 shadow-xs transition-all flex items-center justify-center gap-1 active:scale-95 text-center no-underline"
                         id="download-btn-512"
