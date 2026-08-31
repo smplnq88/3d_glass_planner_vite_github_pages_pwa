@@ -15,7 +15,7 @@ import {
   ListFilter, CheckCircle, Sun, Moon, Download, Settings, Move
 } from 'lucide-react';
 
-// 가짜 연동 처리로 에러를 원천 차단합니다.
+// 외부 연동 및 오류 발생 요소를 제거한 독립형 오프라인 핸들러 세팅
 const currentUser = { displayName: "테스트 유저", email: "test@example.com" };
 const googleAccessToken = "mock-token";
 const handleGoogleSignIn = () => {};
@@ -35,7 +35,6 @@ export default function App() {
   const [prefilledCalendarDate, setPrefilledCalendarDate] = useState<string>('');
   const [editingTodo, setEditingTodo] = useState<Todo | null>(null);
   const [isEditModalOpen, setIsEditModalOpen] = useState(false);
-  const [showDevTools, setShowDevTools] = useState(false);
   const [theme, setTheme] = useState<'light' | 'dark'>('light');
 
   const toggleTheme = () => {
@@ -47,6 +46,13 @@ export default function App() {
     if (saved) {
       try { setTodos(JSON.parse(saved)); } catch (e) {}
     } else {
+      const today = new Date();
+      const defaultDueDate = (daysAhead: number) => {
+        const d = new Date();
+        d.setDate(today.getDate() + daysAhead);
+        return d.toISOString().split('T')[0];
+      };
+
       const initialTodos: Todo[] = [
         {
           id: 'def-1',
@@ -55,9 +61,13 @@ export default function App() {
           completed: false,
           category: 'Creative',
           priority: 'high',
-          dueDate: new Date().toISOString().split('T')[0],
+          dueDate: defaultDueDate(3),
           createdAt: new Date().toISOString(),
-          subtasks: []
+          subtasks: [
+            { id: 'def-1-sub1', text: '블렌더 로 폴리 모델 렌더링', completed: false },
+            { id: 'def-1-sub2', text: '테일윈드 백드롭 필터 흐림 조절', completed: true },
+            { id: 'def-1-sub3', text: '프레임 모션 스프링 물리 모델 배치', completed: false }
+          ]
         }
       ];
       setTodos(initialTodos);
@@ -121,41 +131,52 @@ export default function App() {
     .sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime());
 
   return (
-    <div className={`relative min-h-screen font-sans p-6 ${theme === 'dark' ? 'text-slate-100 bg-slate-900' : 'text-slate-800 bg-slate-50'}`}>
-      <div className="max-w-4xl mx-auto flex flex-col gap-6">
+    <div className={`relative min-h-screen font-sans p-4 sm:p-6 transition-colors duration-300 ${theme === 'dark' ? 'text-slate-100 bg-[#141b2d]' : 'text-slate-800 bg-[#f4f7fb]'}`}>
+      
+      {/* 백그라운드 흐림 효과 요소 */}
+      <BackgroundBlobs theme={theme} />
+
+      <div className="max-w-4xl mx-auto flex flex-col gap-6 relative z-10">
         
-        {/* 구버전 스타일의 깔끔한 헤더 상단 바 */}
-        <header className="flex justify-between items-center pb-4 border-b">
-          <div className="flex items-center gap-2">
-            <CheckCircle className="text-emerald-600" size={24} />
-            <h1 className="text-2xl font-black text-slate-800 dark:text-white">Master Planner</h1>
+        {/* 상단 다크모드 제어 줄 */}
+        <div className="w-full flex justify-end">
+          <button onClick={toggleTheme} className="text-xs font-bold px-3 py-1.5 border rounded-lg bg-white dark:bg-slate-850 cursor-pointer shadow-2xs">
+            {theme === 'light' ? '🌙 다크 모드' : '☀️ 라이트 모드'}
+          </button>
+        </div>
+
+        {/* 🌟 원본 참조 사이트와 100% 동일한 대형 중앙 정렬 헤더 레이아웃 */}
+        <header className="text-center flex flex-col items-center mt-2 mb-4">
+          <div className="flex items-center justify-center gap-2.5 mb-1.5">
+            <CheckCircle className="text-emerald-600" size={36} />
+            <h1 className="text-3xl sm:text-4xl md:text-5xl font-black text-slate-850 dark:text-white tracking-tight">
+              Master Planner
+            </h1>
           </div>
-          <div className="flex gap-4 items-center">
-            <button onClick={toggleTheme} className="text-sm px-3 py-1.5 border rounded-lg bg-white dark:bg-slate-850 cursor-pointer">
-              {theme === 'light' ? '🌙 다크 모드' : '☀️ 라이트 모드'}
-            </button>
-          </div>
+          <p className="text-[11px] font-bold text-slate-400 tracking-widest uppercase font-mono">
+            3D Glassmorphic Planner Project
+          </p>
         </header>
 
-        {/* 대시보드 진행도 판넬 */}
+        {/* 원본 사이트 통계 및 카테고리 카드 제어기 장착 */}
         <TodoStats todos={todos} selectedCategory={selectedCategory} setSelectedCategory={setSelectedCategory} statusFilter={statusFilter} setStatusFilter={setStatusFilter} />
         
-        {/* 입력 폼 */}
+        {/* 할 일 입력 컴포넌트 */}
         <AddTodoForm onAddTodo={handleAddTodo} prefilledDate={prefilledCalendarDate} onClearPrefilledDate={() => setPrefilledCalendarDate('')} />
 
-        {/* 검색 및 제어창 */}
-        <div className="flex flex-col sm:flex-row gap-3 items-center justify-between border p-4 bg-white dark:bg-slate-850 rounded-2xl shadow-xs">
+        {/* 검색 제어판 필터 줄 */}
+        <div className="flex flex-col sm:flex-row gap-3 items-center justify-between border p-4 bg-white/80 dark:bg-slate-850/80 rounded-2xl shadow-xs backdrop-blur-md">
           <div className="relative w-full sm:w-72">
             <Search size={16} className="absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-400" />
-            <input type="text" value={searchQuery} onChange={(e) => setSearchQuery(e.target.value)} placeholder="할 일 검색..." className="w-full rounded-xl border py-2 pl-10 pr-4 text-xs bg-slate-50 dark:bg-slate-900" />
+            <input type="text" value={searchQuery} onChange={(e) => setSearchQuery(e.target.value)} placeholder="할 일 검색..." className="w-full rounded-xl border py-2 pl-10 pr-4 text-xs bg-slate-50/50 dark:bg-slate-900/50" />
           </div>
-          <button onClick={() => setMainViewMode(mainViewMode === 'list' ? 'calendar' : 'list')} className="flex items-center gap-1.5 px-3.5 py-2 text-xs font-bold border rounded-xl bg-white dark:bg-slate-800 cursor-pointer">
+          <button onClick={() => setMainViewMode(mainViewMode === 'list' ? 'calendar' : 'list')} className="flex items-center gap-1.5 px-3.5 py-2 text-xs font-bold border rounded-xl bg-white dark:bg-slate-800 cursor-pointer shadow-2xs">
             <CalendarDays size={13} />
             <span>{mainViewMode === 'list' ? '월/주로 보기 (캘린더)' : '리스트로 보기'}</span>
           </button>
         </div>
 
-        {/* 할 일 목록 타일들 */}
+        {/* 동적 뷰어 메인 콘텐츠 보드 */}
         {mainViewMode === 'calendar' ? (
           <CalendarView todos={todos} onToggleTodo={handleToggleTodo} onToggleSubtask={handleToggleSubtask} onDeleteTodo={handleDeleteTodo} onEditClick={handleEditClick} onAddTodoForDate={(d: string) => setPrefilledCalendarDate(d)} theme={theme} onSwitchToList={() => setMainViewMode('list')} />
         ) : (
@@ -178,7 +199,7 @@ export default function App() {
           </div>
         )}
 
-        {/* 하단 힐링 저널 영역 */}
+        {/* 마음 치유 AI 저널 영역 피드 */}
         <div className="w-full pt-6 border-t border-dashed mt-4">
           <HealingJournalSection todos={todos} onAddTodoFromAI={() => {}} showToast={() => {}} theme={theme} />
         </div>
